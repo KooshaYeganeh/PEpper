@@ -1,0 +1,35 @@
+#!/bin/bash
+
+## This installation file is compatible with Python version 3.8 and later and has been developed to adapt this software to new versions of Python.
+
+# check virtualenv
+
+virt=`whereis virtualenv | cut -d" " -f2`
+if [ "$virt" == "/usr/bin/virtualenv" ];then
+	true
+else
+	echo "virtualenv Not Installed ..."
+	echo "Start Install virtualenv"
+	sudo pip3 install virtualenv
+	echo "virtualenv Installed [ OK ]"
+fi
+
+
+
+virtualenv venv
+source venv/bin/activate
+echo "virtualenv ctreated [ OK ]"
+packages=`cat requirements.txt | cut -d" " -f1`
+for p in $packages;do
+	pip install $p
+done
+
+echo "Python Packages Installed [ OK ]"
+
+# create New Requirements File
+
+pip freeze > requirements.txt
+
+
+
+
