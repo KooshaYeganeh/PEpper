@@ -9,7 +9,6 @@ from modules import exports
 from modules import certificate
 from modules import manifest
 from modules import version
-from modules import yarar
 from modules import imphash
 from modules import antidbg
 from modules import antivm
@@ -62,7 +61,6 @@ def get(argv, csv):
             packed.get(malware, csv)
             certificate.get(malware, csv)
             virustotal.get(malware, csv)
-            yarar.get(malware, csv)
 
     else:
         malware = argv
@@ -93,4 +91,3 @@ def get(argv, csv):
         packed.get(malware, csv)
         certificate.get(malware, csv)
         virustotal.get(malware, csv)
-        yarar.get(malware, csv)

@@ -1,8 +1,9 @@
 import yara
 import os
 import sys
-from . import colors
 import string
+import csv
+from . import colors
 
 def get_yara_path(rule_file):
     """Construct the full path to the specified YARA rule file."""
@@ -35,24 +36,34 @@ def print_match_info(match):
         print(f"{colors.WHITE}\t\t{key.capitalize()}: {colors.DEFAULT}{value}")
 
 def process_matched_strings(strings):
-    """Process and print matched strings from a YARA match."""
-    format_str = "{:<35} {:<1} {:<1}"
-    non_printable_count = 0
+    """Process and print matched strings from YARA rule matches."""
+    try:
+        format_str = "{:<35} {:<1} {:<1}"
+        non_printable_count = 0
 
-    for string_match in strings:
-        # Access the string name and matched string value
-        string_name = string_match[0]  # Name of the string
-        matched_string_value = string_match.string  # Matched string data
+        for string_match in strings:
+            # Access the string name (identifier) and matched string value (data)
+            string_name = string_match.identifier  # Name of the string
+            matched_string_value = string_match.data  # Matched string data (as bytes)
 
-        if all(c in string.printable for c in matched_string_value.decode('utf-8', errors='replace')):
-            print(f"\t\t{format_str.format(matched_string_value.decode('utf-8', errors='replace'), '| Occurrences:', 1)}")
-        else:
-            non_printable_count += 1
+            # Decode the bytes and check if it's printable
+            try:
+                decoded_value = matched_string_value.decode('utf-8', errors='replace')
+            except UnicodeDecodeError:
+                decoded_value = matched_string_value.decode('utf-8', errors='ignore')  # Skip invalid characters
 
-    if non_printable_count > 0:
-        print(f"\t\t[X] {non_printable_count} string(s) not printable")
+            # Check if all characters in the string are printable
+            if all(c in string.printable for c in decoded_value):
+                print(f"\t\t{format_str.format(decoded_value, '| Occurrences:', 1)}")
+            else:
+                non_printable_count += 1
 
-def get(malware, csv):
+        if non_printable_count > 0:
+            print(f"\t\t[X] {non_printable_count} string(s) not printable")
+    except Exception as e:
+        print(f"ERROR on String Matches: {e}")
+
+def get(malware, csv_file):
     """Main function to get YARA matches for the given malware file."""
     print(f"{colors.WHITE}\n------------------------------- {colors.DEFAULT} YARA RULES {colors.DEFAULT} -------------------------------{colors.DEFAULT}")
 
@@ -61,17 +72,21 @@ def get(malware, csv):
     with open(malware, 'rb') as f:
         matches = rules.match(data=f.read())
 
-    if matches:
-        for match in matches:
-            print_match_info(match)
-            if not match.strings:
-                print(f"{colors.WHITE}\tStrings: None")
-            else:
-                print(f"{colors.WHITE}\tStrings: {colors.DEFAULT}")
-                # Process matched strings directly from match.strings
-                process_matched_strings(match.strings)
-            print("\n")
-        csv.write(str(len(matches)))
-    else:
-        print(f"{colors.RED}[X] No matches found{colors.DEFAULT}")
-        csv.write(str(len(matches)))
+    with open(csv_file, 'a', newline='') as csvfile:
+        csv_writer = csv.writer(csvfile)
+        
+        if matches:
+            for match in matches:
+                print_match_info(match)
+                if not match.strings:
+                    print(f"{colors.WHITE}\tStrings: None")
+                else:
+                    print(f"{colors.WHITE}\tStrings: {colors.DEFAULT}")
+                    # Process matched strings directly from match.strings
+                    process_matched_strings(match.strings)
+                print("\n")
+            csv_writer.writerow([malware, len(matches), "Matches found"])
+        else:
+            print(f"{colors.RED}[X] No matches found{colors.DEFAULT}")
+            csv_writer.writerow([malware, 0, "No matches"])
+

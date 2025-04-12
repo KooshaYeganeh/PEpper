@@ -10,10 +10,7 @@
 # Installation
 
 ```console
-eva@paradise:~$ git clone https://github.com/blackeko/PEpper/
-eva@paradise:~$ cd PEpper
-eva@paradise:~$ pip3 install -r requirements.txt
-eva@paradise:~$ python3 pepper.py ./malware_dir
+git clone https://github.com/blackeko/PEpper/ && cd PEpper && ./install
 ```
 
 # Screenshot

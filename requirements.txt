@@ -1,6 +1,10 @@
-pefile == 2019.4.18
-yara_python == 4.0.5
-requests == 2.25.1
-lief == 0.11.4
-python-magic == 0.4.22
-modules == 1.0.0
+certifi==2024.8.30
+charset-normalizer==3.4.0
+idna==3.10
+lief==0.15.1
+modules==1.0.0
+pefile==2024.8.26
+python-magic==0.4.27
+requests==2.32.3
+urllib3==2.2.3
+yara-python==4.5.1
