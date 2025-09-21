@@ -1,11 +1,22 @@
 import lief
 from . import colors
 
-lief.logging.set_level(lief.logging.LOGGING_LEVEL.ERROR)
+# Set logging level (compatible with different LIEF versions)
+if hasattr(lief.logging, "LEVEL"):
+    lief.logging.set_level(lief.logging.LEVEL.ERROR)
+elif hasattr(lief.logging, "Level"):
+    lief.logging.set_level(lief.logging.Level.ERROR)
+else:
+    lief.logging.disable()
+
+# Compatibility for SECTION_CHARACTERISTICS
+try:
+    CHAR = lief.PE.Section.CHARACTERISTICS
+except AttributeError:
+    CHAR = lief.PE.SECTION_CHARACTERISTICS
+
 
 # print PE sections
-
-
 def get(malware, csv):
     print((colors.WHITE + "\n------------------------------- {0:^13}{1:3}".format(
         "SECTIONS", " -------------------------------") + colors.DEFAULT))
@@ -25,21 +36,21 @@ def get(malware, csv):
         print((format_str.format(colors.WHITE + "\tEntropy: " +
                                  colors.DEFAULT, str(section.entropy))))
 
-        if section.has_characteristic(lief.PE.SECTION_CHARACTERISTICS.MEM_READ):
+        if section.has_characteristic(CHAR.MEM_READ):
             print((format_str.format(colors.WHITE + "\tReadable: " +
                                      colors.GREEN, "[" + str('\u2713') + "]")))
         else:
             print((format_str.format(colors.WHITE +
                                      "\tReadable: " + colors.RED, "[X]")))
 
-        if section.has_characteristic(lief.PE.SECTION_CHARACTERISTICS.MEM_WRITE):
+        if section.has_characteristic(CHAR.MEM_WRITE):
             print((format_str.format(colors.WHITE + "\tWritable: " +
                                      colors.GREEN, "[" + str('\u2713') + "]")))
         else:
             print((format_str.format(colors.WHITE +
                                      "\tWritable: " + colors.RED, "[X]")))
 
-        if section.has_characteristic(lief.PE.SECTION_CHARACTERISTICS.MEM_EXECUTE):
+        if section.has_characteristic(CHAR.MEM_EXECUTE):
             print((format_str.format(colors.WHITE + "\tExecutable: " +
                                      colors.GREEN, "[" + str('\u2713') + "]")))
         else:
@@ -57,7 +68,7 @@ def get(malware, csv):
     # suspicious section based on entropy
     print((colors.RED + "\n[-]" + colors.WHITE + " Suspicious section (entropy) ratio:" + colors.DEFAULT + " %i/%i" %
            (susp_sec, sec)))
-    csv.write(str(susp_sec/sec) + "%,")
+    csv.write(str(susp_sec / sec) + "%,")
 
     # suspicious section names
     standardSectionNames = [".text", ".bss", ".rdata",
@@ -68,12 +79,12 @@ def get(malware, csv):
             suspiciousSections += 1
     print((colors.RED + "[-]" + colors.WHITE + " Suspicious section (name) ratio:" + colors.DEFAULT + " %i/%i" %
            (suspiciousSections, sec)))
-    csv.write(str(suspiciousSections/sec) + "%,")
+    csv.write(str(suspiciousSections / sec) + "%,")
 
     # size of code greater than size of code section
     code_sec_size = 0
     for section in binary.sections:
-        if section.has_characteristic(lief.PE.SECTION_CHARACTERISTICS.CNT_CODE):
+        if section.has_characteristic(CHAR.CNT_CODE):
             code_sec_size += section.size
 
     if binary.optional_header.sizeof_code > code_sec_size:

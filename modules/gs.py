@@ -1,7 +1,8 @@
 import lief
 from . import colors
 
-lief.logging.set_level(lief.logging.LOGGING_LEVEL.ERROR)
+lief.logging.set_level(lief.logging.LEVEL.ERROR)
+
 
 # check if PE supports cookies on the stack (GS)
 

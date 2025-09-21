@@ -46,20 +46,42 @@ def get(malware, csv):
             print((colors.WHITE + "\t\tAuthor: " +
                    colors.DEFAULT + str(x.meta.get('author'))))
             if not x.strings:
-                print((colors.WHITE + "\tStrings: " + colors.DEFAULT + "None"))
+                print(colors.WHITE + "\tStrings: " + colors.DEFAULT + "None")
             else:
-                for i in x.strings:
-                    strings_list.append(i[2])
-                print((colors.WHITE + "\tStrings: " + colors.DEFAULT))
+                print(colors.WHITE + "\tStrings: " + colors.DEFAULT)
+                strings_list = []
+
+                for match in x.strings:
+                    # universal handling
+                    if isinstance(match, tuple):
+                        value = match[2]
+                    else:
+                        value = getattr(match, "data", None) or getattr(match, "str", b"<unknown>")
+                    strings_list.append(value)
+
                 non_printable_count = 0
-                for i in list(set(strings_list)):
-                    if all(str(c) in string.printable for c in i):
-                        print(("\t\t" + format_str.format(str(i), colors.WHITE +
-                                                          "| Occurrences:" + colors.DEFAULT, str(strings_list.count(i)))))
+                for s in list(set(strings_list)):
+                    # convert bytes to printable string
+                    if isinstance(s, bytes):
+                        s_printable = "".join(chr(c) if 32 <= c < 127 else "." for c in s)
+                    else:
+                        s_printable = str(s)
+
+                    if all(c in string.printable for c in s_printable):
+                        print("\t\t" + format_str.format(
+                            str(s_printable),
+                            colors.WHITE + "| Occurrences:" + colors.DEFAULT,
+                            str(strings_list.count(s))
+                        ))
                     else:
                         non_printable_count += 1
+
                 if non_printable_count > 0:
                     print("\t\t[X] " + str(non_printable_count) + " string(s) not printable")
+
+                strings_list.clear()
+
+
                 del(strings_list[:])
             print("\n")
         csv.write(str(len(matches)))

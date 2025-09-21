@@ -2,7 +2,10 @@ import lief
 from . import colors
 import datetime
 
-lief.logging.set_level(lief.logging.LOGGING_LEVEL.ERROR)
+
+lief.logging.set_level(lief.logging.LEVEL.ERROR)
+
+
 
 # check for suspicious debug timestamps
 
